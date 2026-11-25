@@ -1,0 +1,15 @@
+Xperia Album Re-Builder
+Copyright (c) 2026 Arial-Bold. MIT License (see LICENSE), except as noted below.
+
+This project contains no code, resources or artwork from Sony. You supply Sony's
+Album app yourself; the Re-Builder changes your copy on your own computer. The
+recoloured app icons are made from your copy's own icon while it builds.
+Not affiliated with or endorsed by Sony Group Corporation. "Xperia" is a
+trademark of Sony Group Corporation, used here only to say which app this works with.
+
+Bundled in the release builds (not stored in this repository):
+  Apktool 2.10.0          Apache License 2.0   https://github.com/iBotPeaches/Apktool
+  uber-apk-signer 1.3.0   Apache License 2.0   https://github.com/patrickfav/uber-apk-signer
+    (includes Google's apksig, Apache License 2.0)
+  FlatLaf 3.5.4           Apache License 2.0   https://github.com/JFormDesigner/FlatLaf
+  Eclipse Temurin runtime GPLv2 with Classpath Exception  https://adoptium.net
