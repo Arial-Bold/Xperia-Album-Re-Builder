@@ -1,0 +1,1 @@
+package android.widget; public abstract class CompoundButton extends TextView { public CompoundButton(android.content.Context c){super(c);} public void setButtonTintList(android.content.res.ColorStateList l){} public boolean isChecked(){return false;} }

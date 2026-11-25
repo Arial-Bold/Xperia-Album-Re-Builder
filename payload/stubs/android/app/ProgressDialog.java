@@ -1,0 +1,1 @@
+package android.app; public class ProgressDialog { public static ProgressDialog show(android.content.Context c, CharSequence t, CharSequence m, boolean indeterminate, boolean cancelable){return null;} public void dismiss(){} }

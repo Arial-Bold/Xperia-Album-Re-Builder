@@ -1,0 +1,1 @@
+package android.content.res.loader; public class ResourcesProvider implements AutoCloseable { public static ResourcesProvider loadFromTable(android.os.ParcelFileDescriptor f, Object assets) throws java.io.IOException {return null;} public void close(){} }

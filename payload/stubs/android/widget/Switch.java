@@ -1,0 +1,1 @@
+package android.widget; public class Switch extends CompoundButton { public Switch(android.content.Context c){super(c);} public void setThumbTintList(android.content.res.ColorStateList l){} public void setTrackTintList(android.content.res.ColorStateList l){} }

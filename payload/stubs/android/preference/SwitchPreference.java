@@ -1,0 +1,1 @@
+package android.preference; public class SwitchPreference extends Preference { public SwitchPreference(android.content.Context c){super(c);} public void setChecked(boolean b){} public boolean isChecked(){return false;} }
