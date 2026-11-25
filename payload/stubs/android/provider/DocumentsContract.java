@@ -1,0 +1,1 @@
+package android.provider; public final class DocumentsContract { public static String getTreeDocumentId(android.net.Uri u){return null;} public static android.net.Uri buildDocumentUriUsingTree(android.net.Uri t, String id){return null;} public static android.net.Uri buildDocumentUri(String a, String id){return null;} }

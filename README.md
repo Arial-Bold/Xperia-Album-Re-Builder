@@ -15,7 +15,7 @@
 - **Smooth fast-scroll bar.** On phones where hiding the navigation bar resizes the screen, Album’s scroll handle let go after a few pixels. The bars now stay visible while you fast-scroll, and the handle follows your finger.
 - **Sort by date taken.** Photos are sorted by the date in their EXIF data, so copied or transferred photos appear where they belong even when Android doesn’t know their date taken. A switch in Settings turns it off.
 - **Fix photo dates.** Corrects the saved date of those photos, so every app sorts them correctly. The pictures themselves aren’t changed.
-- **SD card support.** Delete and favorite photos and videos on an SD card. Sony’s app used Android features that newer versions of Android block.
+- **SD card support.** Delete and favorite photos and videos on an SD card. Sony’s app used Android features that newer versions of Android block, and asked for access to the whole card, which Android no longer allows; the rebuilt app asks for the folder that holds your photos (such as DCIM) instead.
 - **App icon colors.** Choose Orange (Sony’s original), Red, Pink, Purple, Blue, Teal, Green or Graphite in Settings. Album restarts in the new color, and its headings, list titles and switches change with it.
 - **Tidier Settings.** Four sections: General (Theme, App icon color, Navigation menu), Photo (Header slideshow, Sort by date taken, Fix photo dates), Video (Background playback, Subtitle settings) and About. Settings for Sony-only services are gone.
 

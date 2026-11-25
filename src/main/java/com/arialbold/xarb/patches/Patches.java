@@ -46,6 +46,7 @@ public final class Patches {
         l.add(new SortByDateTaken());
         l.add(new SettingsScreen());
         l.add(new SdCard());
+        l.add(new SdFolders());
         l.add(new BackgroundPlayback());
         return l;
     }
@@ -225,6 +226,78 @@ public final class Patches {
             for (String p : PROXIES) if (s.deleteClass("Landroid/os/storage/" + p + ";")) removed++;
             need(removed == PROXIES.length, "Sony's storage helpers have changed (" + removed + " of " + PROXIES.length + " found)");
             dm.save();
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // SD card folder access: Sony only accepts the card's top folder, which Android 11 and later
+    // won't let you choose. Ask for (and accept) the folder that holds the photo instead, and find
+    // the matching folder permission for each file.
+
+    static final String SD_ACTIVITY = "Lcom/sonyericsson/album/util/permission/PermissionRequestSdCardActivity;";
+
+    static final class SdFolders implements Patch {
+        public String feature() { return "SD card access by folder"; }
+        public void apply(Smali s) throws Exception {
+            // 1. file -> document URI through whichever granted folder holds it
+            ClassFile dpu = s.byDescriptor("Lcom/sonyericsson/album/common/util/DocumentProviderUtils;");
+            need(dpu != null, "Album's document helpers weren't found");
+            Method conv = dpu.method("static convertTreeUri(Landroid/content/Context;Ljava/io/File;)Landroid/net/Uri;");
+            need(conv != null, "convertTreeUri wasn't found");
+            conv.insert(conv.firstInstruction(),
+                    "    invoke-static {p0, p1}, " + P + "SdTrees;->documentUri(Landroid/content/Context;Ljava/io/File;)Landroid/net/Uri;",
+                    "    move-result-object p0",
+                    "    return-object p0");
+
+            // 2. ask only when no granted folder holds the file
+            ClassFile utils = s.byDescriptor("Lcom/sonyericsson/album/util/Utils;");
+            Method req = utils == null ? null : utils.method("requestSdAccessPermissionIfNecessary(Landroid/app/Activity;Ljava/lang/String;I)Z");
+            need(req != null, "Album's SD card permission check wasn't found");
+            Pattern needCall = Pattern.compile("^\\s*invoke-static \\{([vp]\\d+)\\}, Lcom/sonyericsson/album/util/Utils;->needSdAccessPermissionSetting\\(Landroid/content/Context;\\)Z\\s*$");
+            int i = req.findRegex(needCall, req.start);
+            need(i >= 0, "Album's SD card permission check has changed");
+            Matcher mm = needCall.matcher(utils.lines.get(i)); mm.matches();
+            need(Smali.fitsInvoke(req, mm.group(1), "p1"), "unexpected register layout");
+            req.replace(i, "    invoke-static {" + mm.group(1) + ", p1}, " + P + "SdTrees;->needAccess(Landroid/content/Context;Ljava/lang/String;)Z");
+
+            // 3. the permission screen: check, ask and accept by folder
+            ClassFile act = s.byDescriptor(SD_ACTIVITY);
+            need(act != null, "Album's SD card permission screen wasn't found");
+            String field = SD_ACTIVITY + "->mCheckPath:Ljava/lang/String;";
+            Method rp = act.method(" requestPermissionSdCard()V");
+            need(rp != null, "requestPermissionSdCard wasn't found");
+            Pattern avail = Pattern.compile("^\\s*invoke-static \\{p0\\}, Lcom/sonyericsson/album/common/util/DocumentProviderUtils;->isPersistableUriPermissionAvailable\\(Landroid/content/Context;\\)Z\\s*$");
+            i = rp.findRegex(avail, rp.start);
+            need(i >= 0, "the permission screen's check has changed");
+            String r0 = act.lines.get(i + 2).trim().replace("move-result ", "");
+            need(r0.matches("v\\d+"), "unexpected register layout");
+            act.lines.set(i, "    invoke-static {p0, " + r0 + "}, " + P + "SdTrees;->hasAccess(Landroid/content/Context;Ljava/lang/String;)Z");
+            rp.insert(i, "    iget-object " + r0 + ", p0, " + field);
+            Pattern dlg = Pattern.compile("^\\s*invoke-static \\{p0, (v\\d+), (v\\d+)\\}, Lcom/sonyericsson/album/dialogs/DialogHelper;->requestSdPermissionDialog\\(Landroid/app/Activity;Landroid/os/storage/StorageVolume;I\\)V\\s*$");
+            i = rp.findRegex(dlg, rp.start);
+            need(i >= 0, "the permission screen's dialog has changed");
+            mm = dlg.matcher(act.lines.get(i)); mm.matches();
+            String free = rp.newLocal();
+            need(Smali.fitsInvoke(rp, "p0", mm.group(1), mm.group(2), free), "unexpected register layout");
+            act.lines.set(i, "    invoke-static {p0, " + mm.group(1) + ", " + mm.group(2) + ", " + free + "}, " + P
+                    + "SdTrees;->request(Landroid/app/Activity;Ljava/lang/Object;ILjava/lang/String;)V");
+            rp.insert(i, "    iget-object " + free + ", p0, " + field);
+
+            Method res = act.method(" onActivityResult(IILandroid/content/Intent;)V");
+            need(res != null, "the permission screen's result handling wasn't found");
+            Pattern eq = Pattern.compile("^\\s*invoke-virtual \\{([vp]\\d+), ([vp]\\d+)\\}, Ljava/lang/String;->equals\\(Ljava/lang/Object;\\)Z\\s*$");
+            i = res.findRegex(eq, res.start);
+            need(i >= 0, "the permission screen's folder check has changed");
+            mm = eq.matcher(act.lines.get(i)); mm.matches();
+            free = res.newLocal();
+            need(Smali.fitsInvoke(res, mm.group(1), mm.group(2), free), "unexpected register layout");
+            act.lines.set(i, "    invoke-static {" + mm.group(1) + ", " + mm.group(2) + ", " + free + "}, " + P
+                    + "SdTrees;->accept(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
+            res.insert(i, "    iget-object " + free + ", p0, " + field);
+
+            dpu.save();
+            utils.save();
+            act.save();
         }
     }
 
